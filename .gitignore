@@ -1,19 +1,16 @@
-#!/opt/anaconda3/bin/python3                   # Use the Anaconda Python interpreter when run as an executable
-from tabulate import tabulate                  # Pretty-prints tables in the terminal
-import csv                                     # Standard library for CSV read/write
+#!/opt/anaconda3/bin/python3
+from tabulate import tabulate
+import csv
 
-# =========================
-# DATA
-# =========================
-CarList = {                                    # In-memory "database": dict keyed by license plate
-    'B 3 ST': {                                # Unique key (license plate)
-        'plate_number': 'B 3 ST',              # Redundant field kept for convenient display/export
-        'type': 'Toyota Avanza',               # Car model/type
-        'color': 'Off-White',                  # Car color
-        'owner': 'Iffa',                       # Owner name
-        'contact': '08126660808',              # Owner contact
-        'status': 'Available',                 # Availability or current status
-        'price': 450000                        # Daily rent price (integer, unformatted)
+CarList = {
+    'B 3 ST': {
+        'plate_number': 'B 3 ST',
+        'type': 'Toyota Avanza',
+        'color': 'Off-White',
+        'owner': 'Iffa',
+        'contact': '08126660808',
+        'status': 'Available',
+        'price': 450000
     },
     'B 34 UT': {
         'plate_number': 'B 34 UT',
@@ -35,57 +32,46 @@ CarList = {                                    # In-memory "database": dict keye
     }
 }
 
-# =========================
-# HELPER FUNCTIONS
-# =========================
 def _input_int(prompt, default=None):
-    """Ask for an integer input. If default is provided and user presses Enter, return the default."""
-    while True:                                 # Keep asking until a valid integer (or default) is returned
-        raw = input(prompt).strip()             # Read input and trim whitespace
-        if raw == "" and default is not None:   # If user pressed Enter and a default exists
-            return default                      # Use the default value
+    while True:
+        raw = input(prompt).strip()
+        if raw == "" and default is not None:
+            return default
         try:
-            return int(raw)                     # Try converting input to int
-        except ValueError:                      # If conversion fails (e.g., letters typed)
-            print("Please enter a valid number.")  # Tell the user and loop again
+            return int(raw)
+        except ValueError:
+            print("Please enter a valid number.")
 
 def _confirm(prompt):
-    """Yes/No confirmation. Return True if the user enters 'y'."""
-    while True:                                 # Keep asking until a valid 'y' or 'n'
-        ans = input(f"{prompt} (y/n): ").strip().lower()  # Normalize input to lowercase
-        if ans in ("y", "n"):                   # Accept only 'y' or 'n'
-            return ans == "y"                   # True for 'y', False for 'n'
-        print("Please answer with 'y' or 'n'.") # Otherwise, ask again
+    while True:
+        ans = input(f"{prompt} (y/n): ").strip().lower()
+        if ans in ("y", "n"):
+            return ans == "y"
+        print("Please answer with 'y' or 'n'.")
 
 def _input_with_default(prompt, default_str):
-    """Prompt with a default value (Enter keeps the current/default value)."""
-    raw = input(f"{prompt} [{default_str}]: ").strip()  # Show the current/default value in brackets
-    return raw if raw != "" else default_str            # Keep default when user presses Enter
+    raw = input(f"{prompt} [{default_str}]: ").strip()
+    return raw if raw != "" else default_str
 
 def _list_cars():
-    """Return an ordered list of CarList values for 1-based indexing."""
-    return list(CarList.values())              # Convert dict values to list to support index-based access
+    return list(CarList.values())
 
 def _display_single_by_index(index1_based):
-    cars = _list_cars()                        # Get ordered list of cars
-    if index1_based < 1 or index1_based > len(cars):  # Validate 1..N
-        print("\n<<< Index out of range >>>") # Friendly message if invalid
+    cars = _list_cars()
+    if index1_based < 1 or index1_based > len(cars):
+        print("\n<<< Index out of range >>>")
         return
-    display([cars[index1_based - 1]])          # Show a single car as a one-item list
+    display([cars[index1_based - 1]])
 
-# =========================
-# CSV EXPORT
-# =========================
-CSV_HEADERS = ["plate_number", "type", "color", "owner", "contact", "status", "price"]  # Fixed column order
+CSV_HEADERS = ["plate_number", "type", "color", "owner", "contact", "status", "price"]
 
 def export_csv(filepath="carlist.csv"):
-    """Save the entire CarList to a CSV file."""
     try:
-        with open(filepath, "w", newline="", encoding="utf-8") as f:  # Open file to write UTF-8 CSV
-            writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)        # CSV writer configured with headers
-            writer.writeheader()                                      # Write the header row
-            for plate, car in CarList.items():                        # Iterate over all cars
-                writer.writerow({                                     # Write one row per car (dict maps columns)
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=CSV_HEADERS)
+            writer.writeheader()
+            for plate, car in CarList.items():
+                writer.writerow({
                     "plate_number": car["plate_number"],
                     "type": car["type"],
                     "color": car["color"],
@@ -94,15 +80,12 @@ def export_csv(filepath="carlist.csv"):
                     "status": car["status"],
                     "price": car["price"],
                 })
-        print(f'\n<<< Exported {len(CarList)} records to "{filepath}" >>>')  # Success message with count
-    except Exception as e:                                            # Catch any file/IO errors
-        print(f"\n<<< Failed to export CSV: {e} >>>")                 # Show failure reason
+        print(f'\n<<< Exported {len(CarList)} records to "{filepath}" >>>')
+    except Exception as e:
+        print(f"\n<<< Failed to export CSV: {e} >>>")
 
-# =========================
-# MAIN UI
-# =========================
 def main_menu():
-    while True:                                                       # Loop until a valid choice is returned
+    while True:
         try:
             req = int(input(''' 
 <<<<< WELCOME TO RUSSELL RENT CAR >>>>>
@@ -115,42 +98,36 @@ Menu:
     5. Export to CSV
     6. Exit
 
-Enter the menu number you want to run: '''))  # Multiline prompt for the main menu
-            if req in (1, 2, 3, 4, 5, 6):                           # Accept only 1..6
-                return req                                           # Return the selected option
-            print('Please enter 1-6 only.')                          # Guidance for out-of-range numbers
-        except ValueError:                                           # If user typed non-numeric input
-            print('Please enter a number.')                          # Ask again
+Enter the menu number you want to run: ''')) 
+            if req in (1, 2, 3, 4, 5, 6):
+                return req
+            print('Please enter 1-6 only.')
+        except ValueError:
+            print('Please enter a number.')
 
 def display(data):
-    """Render cars in a formatted table (accepts CarList dict or a list of car dicts)."""
-    print('\nCar List at Russell Rent Car')                          # Section title
-    print('-' * 130)                                                 # Visual separator
-
-    iterable = data.values() if isinstance(data, dict) else data     # Support dict (CarList) or list input
-    rows = []                                                        # Will hold table body rows
-    for idx, car in enumerate(iterable, start=1):                    # Enumerate cars starting at 1 for Index
-        rows.append([                                                # Build one row per car (ordered by headers)
-            idx,                                                     # Index column (1-based)
+    print('\nCar List at Russell Rent Car')
+    print('-' * 130)
+    iterable = data.values() if isinstance(data, dict) else data
+    rows = []
+    for idx, car in enumerate(iterable, start=1):
+        rows.append([
+            idx,
             car['plate_number'],
             car['type'],
             car['color'],
             car['owner'],
             car['contact'],
             car['status'],
-            f"{car['price']:,}"                                      # Format with thousands separators
+            f"{car['price']:,}"
         ])
+    headers = ["Index", "Plate Number", "Type", "Color", "Owner", "Contact", "Status", "Rent Price"]
+    align = ("right", "left", "left", "left", "left", "left", "left", "right")
+    print(tabulate(rows, headers=headers, tablefmt="fancy_grid", colalign=align))
+    print('-' * 130)
 
-    headers = ["Index", "Plate Number", "Type", "Color", "Owner", "Contact", "Status", "Rent Price"]  # Table headers
-    align = ("right", "left", "left", "left", "left", "left", "left", "right")                        # Column alignment
-    print(tabulate(rows, headers=headers, tablefmt="fancy_grid", colalign=align))  # Render pretty table
-    print('-' * 130)                                                # Footer separator
-
-# =========================
-# MENU: DISPLAY (READ)
-# =========================
 def menu_read():
-    while True:                                                     # Submenu loop
+    while True:
         try:
             option = int(input('''
 ------------------------------------------------------------------------------------------------
@@ -160,56 +137,47 @@ Display Data Options:
     3. View car by LICENSE PLATE
     4. Back to Main Menu
 
-Choose: ''').strip())                                              # Ask which display option to run
-        except ValueError:                                          # Non-numeric input
+Choose: ''').strip())
+        except ValueError:
             print('Please enter 1/2/3/4.')
             continue
-
-        if len(CarList) == 0:                                       # If there is no data to show
-            print('\n<<< No car data available >>>')                # Inform the user
-            if option == 4:                                         # Allow immediate return to main menu
+        if len(CarList) == 0:
+            print('\n<<< No car data available >>>')
+            if option == 4:
                 break
             else:
                 continue
-
-        if option == 1:                                             # Show all cars
+        if option == 1:
             display(CarList)
-        elif option == 2:                                           # Show by INDEX
-            display(CarList)                                        # First show all so the user can see indices
-            idx = _input_int('\nEnter the car INDEX number you want to view: ')  # Ask for 1-based index
-            _display_single_by_index(idx)                           # Display that single record
-        elif option == 3:                                           # Show by LICENSE PLATE
-            find_plate_number = input('\nInsert the car LICENSE PLATE: ').upper().strip()  # Normalize plate
-            if find_plate_number in CarList:                        # Lookup by key
-                display([CarList[find_plate_number]])               # Display single record as a one-item list
+        elif option == 2:
+            display(CarList)
+            idx = _input_int('\nEnter the car INDEX number you want to view: ')
+            _display_single_by_index(idx)
+        elif option == 3:
+            find_plate_number = input('\nInsert the car LICENSE PLATE: ').upper().strip()
+            if find_plate_number in CarList:
+                display([CarList[find_plate_number]])
             else:
-                print('\n<<< No car data available >>>')            # Not found message
-        elif option == 4:                                           # Back to main menu
+                print('\n<<< No car data available >>>')
+        elif option == 4:
             break
         else:
-            print('Please enter 1/2/3/4.')                          # Guard for out-of-range values
+            print('Please enter 1/2/3/4.')
 
-# =========================
-# MENU: CREATE
-# =========================
 def menu_create():
-    while True:                                                     # Loop until user chooses 'n'
-        option = input('\nAdd a new car? (y/n): ').lower().strip()  # Ask to add a record
+    while True:
+        option = input('\nAdd a new car? (y/n): ').lower().strip()
         if option == 'y':
-            new_plate_number = input('\nEnter License Plate: ').upper().strip()  # Normalize plate to uppercase
-            if new_plate_number in CarList:                         # Enforce unique key
+            new_plate_number = input('\nEnter License Plate: ').upper().strip()
+            if new_plate_number in CarList:
                 print(f'\n<<< Car with plate {new_plate_number} already exists >>>')
                 continue
-
-            # Gather fields for the new record; normalize casing where appropriate
             new_type    = input('Enter The Car Type: ').strip().title()
             new_color   = input('Enter The Car Color: ').strip().title()
             new_owner   = input('Enter The Car Owner: ').strip().title()
             new_contact = input('Enter The Car Contact Owner: ').strip()
             new_status  = input('Enter The Car Status: ').strip().title()
-            new_price   = _input_int('Enter The Rent Price: ')      # Validate numeric price
-
-            # Create a temporary record to preview
+            new_price   = _input_int('Enter The Rent Price: ')
             temp = {
                 'plate_number': new_plate_number,
                 'type': new_type,
@@ -219,34 +187,28 @@ def menu_create():
                 'status': new_status,
                 'price': new_price
             }
-            print("\nSummary (New Record):")                        # Show a summary before saving
-            display([temp])                                         # Preview just the new record
-
-            if _confirm('Save this new car?'):                      # Confirm before committing
-                CarList[new_plate_number] = temp                    # Insert into the "database"
+            print("\nSummary (New Record):")
+            display([temp])
+            if _confirm('Save this new car?'):
+                CarList[new_plate_number] = temp
                 print('\n<<< Data has been saved successfully! >>>')
-                display(CarList)                                    # Show updated table
+                display(CarList)
             else:
-                print('\n<<< Data has not been recorded! >>>')      # Cancel message
-        elif option == 'n':                                         # Exit the create loop
+                print('\n<<< Data has not been recorded! >>>')
+        elif option == 'n':
             break
 
-# =========================
-# MENU: UPDATE
-# =========================
 def menu_update():
-    while True:                                                     # Loop until user chooses 'n'
+    while True:
         option = input('\nDo you want to update a car’s information? (y/n): ').lower().strip()
         if option == 'y':
-            find_plate_number = input('\nEnter The Car License Plate: ').upper().strip()  # Normalize plate
-            if find_plate_number not in CarList:                    # Validate existence
+            find_plate_number = input('\nEnter The Car License Plate: ').upper().strip()
+            if find_plate_number not in CarList:
                 print(f'\n<<< No car found with license plate {find_plate_number} >>>')
                 continue
-
-            current = CarList[find_plate_number]                    # Fetch current record
-            print("\nCurrent data:")                                # Show current state
+            current = CarList[find_plate_number]
+            print("\nCurrent data:")
             display([current])
-
             try:
                 column = int(input('''
 Column Index:
@@ -258,14 +220,11 @@ Column Index:
     6. Rent Price
     7. All Fields
 
-Enter the column index you want to edit: ''').strip())             # Ask which field(s) to edit
+Enter the column index you want to edit: ''').strip())
             except ValueError:
                 print('Please enter 1-7.')
                 continue
-
-            draft = current.copy()                                  # Work on a copy so we can preview safely
-
-            # Update a single field or all fields, using helpers to preserve defaults on Enter
+            draft = current.copy()
             if column == 1:
                 draft['type'] = _input_with_default('New Car Type', current['type']).title()
             elif column == 2:
@@ -288,64 +247,53 @@ Enter the column index you want to edit: ''').strip())             # Ask which f
             else:
                 print('Please enter 1-7.')
                 continue
-
-            print("\nProposed changes:")                            # Show what will change
-            display([draft])                                        # Preview edited record
-
-            if _confirm('Apply these changes?'):                    # Final confirmation
-                CarList[find_plate_number] = draft                  # Commit changes
+            print("\nProposed changes:")
+            display([draft])
+            if _confirm('Apply these changes?'):
+                CarList[find_plate_number] = draft
                 print('\n<<< Data has been updated successfully! >>>')
-                display(CarList)                                    # Show updated list
+                display(CarList)
             else:
-                print('\n<<< Data has not been recorded! >>>')      # Cancel message
-
-        elif option == 'n':                                         # Exit update loop
+                print('\n<<< Data has not been recorded! >>>')
+        elif option == 'n':
             break
 
-# =========================
-# MENU: DELETE
-# =========================
 def menu_delete():
-    while True:                                                     # Loop until user chooses 'n'
+    while True:
         option = input('\nDo you want to delete a car record? (y/n): ').lower().strip()
         if option == 'y':
-            find_plate_number = input('Enter the Car License Plate: ').upper().strip()  # Normalize plate
-            if find_plate_number not in CarList:                    # Validate existence
+            find_plate_number = input('Enter the Car License Plate: ').upper().strip()
+            if find_plate_number not in CarList:
                 print(f'\n<<< No car found with license plate {find_plate_number} >>>')
                 continue
-
-            print("\nSelected record to delete:")                   # Show which record will be deleted
+            print("\nSelected record to delete:")
             display([CarList[find_plate_number]])
-
-            if _confirm('Are you sure you want to delete this car data?'):  # Confirm destructive action
-                del CarList[find_plate_number]                      # Remove from the "database"
+            if _confirm('Are you sure you want to delete this car data?'):
+                del CarList[find_plate_number]
                 print('\n<<< Data has been deleted successfully! >>>')
-                display(CarList)                                    # Show remaining data
+                display(CarList)
             else:
-                print('\n<<< Data has not been deleted! >>>')       # Cancel message
-        elif option == 'n':                                         # Exit delete loop
+                print('\n<<< Data has not been deleted! >>>')
+        elif option == 'n':
             break
 
-# =========================
-# ENTRY POINT
-# =========================
 def menu_exit():
-    print('\n<<< You have logged out of the Russell Rent Car application! >>>\n')  # Goodbye message
+    print('\n<<< You have logged out of the Russell Rent Car application! >>>\n')
 
-if __name__ == "__main__":                                         # Run only when executed directly (not imported)
-    while True:                                                    # Main event loop
-        req = main_menu()                                          # Ask the user which action to perform
+if __name__ == "__main__":
+    while True:
+        req = main_menu()
         if req == 1:
-            menu_read()                                            # Display submenu
+            menu_read()
         elif req == 2:
-            menu_create()                                          # Create new record(s)
+            menu_create()
         elif req == 3:
-            menu_update()                                          # Update existing record
+            menu_update()
         elif req == 4:
-            menu_delete()                                          # Delete a record
+            menu_delete()
         elif req == 5:
-            filename = _input_with_default("Filename to export", "carlist.csv")  # Ask for export file name
-            export_csv(filename)                                    # Write the CSV file
+            filename = _input_with_default("Filename to export", "carlist.csv")
+            export_csv(filename)
         elif req == 6:
-            menu_exit()                                            # Print goodbye
-            break                                                  # Exit the main loop → end program
+            menu_exit()
+            break
